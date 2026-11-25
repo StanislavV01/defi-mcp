@@ -6,7 +6,15 @@ import { arbitrum, base, mainnet, optimism, polygon } from "viem/chains";
  * ProtocolDataProvider) is resolved from it at runtime, so upgrades on Aave's
  * side don't break us. Source: https://github.com/bgd-labs/aave-address-book
  */
-export const SUPPORTED_CHAINS = {
+export interface ChainConfig {
+  chain: Chain;
+  addressesProvider: Address;
+  rpcEnv: string;
+}
+
+export type ChainName = "ethereum" | "base" | "arbitrum" | "optimism" | "polygon";
+
+export const SUPPORTED_CHAINS: Record<ChainName, ChainConfig> = {
   ethereum: {
     chain: mainnet,
     addressesProvider: "0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e",
@@ -32,9 +40,7 @@ export const SUPPORTED_CHAINS = {
     addressesProvider: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
     rpcEnv: "RPC_URL_POLYGON",
   },
-} as const satisfies Record<string, { chain: Chain; addressesProvider: Address; rpcEnv: string }>;
-
-export type ChainName = keyof typeof SUPPORTED_CHAINS;
+};
 export const CHAIN_NAMES = Object.keys(SUPPORTED_CHAINS) as [ChainName, ...ChainName[]];
 
 const clients = new Map<ChainName, PublicClient>();
