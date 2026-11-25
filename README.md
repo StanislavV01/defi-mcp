@@ -87,6 +87,22 @@ claude mcp add defi -- node /absolute/path/to/defi-mcp/dist/index.js
 npm run inspect
 ```
 
+### Use as a library
+
+The same reads and risk math are exported for direct use, e.g. as tools in an AI SDK agent:
+
+```ts
+import { getAccount, toSimPositions, applyAction, computeHealth } from "defi-mcp";
+
+const account = await getAccount("base", "0x…");
+const after = applyAction(toSimPositions(account), "borrow", "USDC", 500);
+console.log(computeHealth(after).healthFactor);
+```
+
+```bash
+npm install github:StanislavV01/defi-mcp
+```
+
 ## Configuration
 
 Public RPCs work out of the box but are rate-limited. For real use set your own:
