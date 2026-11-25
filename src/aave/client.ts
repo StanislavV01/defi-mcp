@@ -159,25 +159,30 @@ export async function getAccount(chain: ChainName, userInput: string): Promise<A
   const { pool, dataProvider } = await getContracts(chain);
   const markets = await getMarkets(chain);
 
-  const [accountData, eMode, ...userReserves] = await client.multicall({
-    allowFailure: false,
-    contracts: [
-      { address: pool, abi: poolAbi, functionName: "getUserAccountData", args: [user] },
-      { address: pool, abi: poolAbi, functionName: "getUserEMode", args: [user] },
-      ...markets.map((m) => ({
+  const [[accountData, eMode], userReserves] = await Promise.all([
+    client.multicall({
+      allowFailure: false,
+      contracts: [
+        { address: pool, abi: poolAbi, functionName: "getUserAccountData", args: [user] },
+        { address: pool, abi: poolAbi, functionName: "getUserEMode", args: [user] },
+      ],
+    }),
+    client.multicall({
+      allowFailure: false,
+      contracts: markets.map((m) => ({
         address: dataProvider,
         abi: dataProviderAbi,
         functionName: "getUserReserveData" as const,
         args: [m.address, user] as const,
       })),
-    ],
-  });
+    }),
+  ]);
 
-  const [collateralBase, debtBase, availableBase, currentLt, ltv, hfRaw] = accountData as unknown as readonly bigint[];
+  const [collateralBase, debtBase, availableBase, currentLt, ltv, hfRaw] = accountData;
 
   const reserves: UserReserve[] = [];
   markets.forEach((m, i) => {
-    const ur = userReserves[i] as unknown as readonly [bigint, bigint, bigint, bigint, bigint, bigint, bigint, number, boolean];
+    const ur = userReserves[i]!;
     const supplied = fromUnits(ur[0], m.decimals);
     const borrowed = fromUnits(ur[1] + ur[2], m.decimals);
     if (supplied === 0 && borrowed === 0) return;
